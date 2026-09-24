@@ -34,32 +34,33 @@ bsDict = tomlkit.parse(open("./bracketed.toml", "r").read())
 config = merge_dicts(nfsDict, bsDict)
 #config = tomlkit.parse(configStr)
 
-segmentColors = {
-    "info":      ("#000000", "#a3aed2"),
-    "directory": ("#e3e5e5", "#769ff0"),
-    "git":       ("#769ff0", "#394260"),
-    "lang":      ("#769ff0", "#212736"),
-    "time":      ("#a0a9cb", "#1d2230")
-}
+segmentColors = [
+    ("#000000", "#a3aed2"),
+    ("#e3e5e5", "#769ff0"),
+    ("#769ff0", "#394260"),
+    ("#769ff0", "#212736"),
+    ("#a0a9cb", "#1d2230")
+]
 segmentContents = {
         "info":      ["$username"],
     "directory": [],
     "git":       ["$git_branch", "$git_status"],
     "lang":      ["$c", "$cpp", "$rust", "$golang", "$nodejs", "$bun", "$php", "$java", "$kotlin", "$haskell", "$python"],
     "time":      ["$time"],
+    "empty":     [],
     "prompt":    ["$directory","$character"]
 }
 # List of modules that have dynamic colors, and thus should not have an fg style set
 dynColorModules = []
-segmentOrder = ["info", "directory", "git", "lang", "time"]
+segmentOrder = ["info", "git", "lang"]
 
 # Generate format and apply styles
 breg = re.compile(r"\[(.*)\]")
-shellFormat = f"[]({segmentColors[segmentOrder[0]][1]})"
+shellFormat = f"[]({segmentColors[0][1]})"
 for i in range(len(segmentOrder)):
     segment = segmentOrder[i]
     contents = segmentContents[segment]
-    colors = segmentColors[segment]
+    colors = segmentColors[i]
     for j in range(len(contents)):
         shellFormat += contents[j]
         moduleName = contents[j][1::]
@@ -82,8 +83,8 @@ for i in range(len(segmentOrder)):
                 config[moduleName]["format"] = "[ $path ]($style)"
             pass
 
-    bgStr = f"bg:{segmentColors[segmentOrder[i+1]][1]}" if i < len(segmentOrder) - 1 else ""
-    shellFormat += f"[](fg:{segmentColors[segment][1]} {bgStr})"
+    bgStr = f"bg:{segmentColors[i+1][1]}" if i < len(segmentOrder) - 1 else ""
+    shellFormat += f"[{'' if i < len(segmentOrder) -1 else ''}](fg:{segmentColors[i][1]} {bgStr})"
 
 shellFormat += "$line_break"
 for i in range(len(segmentContents["prompt"])):
