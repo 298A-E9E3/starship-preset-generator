@@ -47,12 +47,13 @@ segmentContents = {
     "git":       ["$git_branch", "$git_status"],
     "lang":      ["$c", "$cpp", "$rust", "$golang", "$nodejs", "$bun", "$php", "$java", "$kotlin", "$haskell", "$python"],
     "time":      ["$time"],
+    "sys-stats": ["$memory_usage", "$jobs", "$battery"],
     "empty":     [],
     "prompt":    ["$directory","$character"]
 }
 # List of modules that have dynamic colors, and thus should not have an fg style set
 dynColorModules = []
-segmentOrder = ["info", "git", "lang"]
+segmentOrder = ["info", "git", "lang", "sys-stats"]
 
 # Generate format and apply styles
 breg = re.compile(r"\[(.*)\]")
@@ -64,7 +65,7 @@ for i in range(len(segmentOrder)):
     for j in range(len(contents)):
         shellFormat += contents[j]
         moduleName = contents[j][1::]
-        if(moduleName in ["os"]):
+        if(moduleName in ["os", "memory_usage"]):
             config[moduleName]["disabled"] = False
 
         if(not moduleName in dynColorModules):
