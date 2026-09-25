@@ -25,10 +25,19 @@ def merge_dicts(a: Dict[Any, Any], b: Dict[Any, Any]) -> Dict[Any, Any]:
 FG = 0
 BG = 1
 
+# Config values
+# Use nerd font instead of emojis
+USENERDFONT = True
+# Have the prompt and the info bar be on separate lines
+TWOLINEPROMPT = True
+
 # Get base presets
 subprocess.run(["starship", "preset", "nerd-font-symbols", "-o", "./nfs.toml"])
 subprocess.run(["starship", "preset", "bracketed-segments", "-o", "./bracketed.toml"])
-nfsDict = tomlkit.parse(open("./nfs.toml", "r").read())
+if(USENERDFONT):
+    nfsDict = tomlkit.parse(open("./nfs.toml", "r").read())
+else:
+    nfsDict = {}
 bsDict = tomlkit.parse(open("./bracketed.toml", "r").read())
 # Merge base presets
 config = merge_dicts(nfsDict, bsDict)
@@ -43,8 +52,9 @@ segmentColors = [
 ]
 
 # Define segment contents
+# Values starting with $'s are modules, all others are interpreted as plaintext
 segmentContents = {
-    "info":      ["$username"],
+    "info":      ["$username","$hostname"],
     "directory": [],
     "git":       ["$git_branch", "$git_status"],
     "lang":      ["$c", "$cpp", "$rust", "$golang", "$nodejs", "$bun", "$php", "$java", "$kotlin", "$haskell", "$python"],
@@ -77,7 +87,7 @@ for i in range(len(segmentOrder)):
             moduleName = contents[j][1::]
 
             # Re-enable modules that are disabled by default
-            if(moduleName in ["os", "memory_usage"]):
+            if(moduleName in ["os", "memory_usage", "battery"]):
                 config[moduleName]["disabled"] = False
 
             # Generate the style string. fg is only defined if the module isn't dynamically colored
@@ -93,7 +103,7 @@ for i in range(len(segmentOrder)):
                 moduleFormat: str = config[moduleName]["format"]
                 moduleFormat = moduleFormat.replace("\\[", "").replace("\\]", "")
                 moduleFormat = breg.sub(r"[[ \1 ]("+styleStr+")]", moduleFormat)
-                config[moduleName]["format"] = moduleFormat
+                config[moduleName]["format"] = moduleFormat.strip()
             except:
                 # Apply a format to the directory module, which doesn't have one by default
                 if(moduleName=="directory"):
@@ -106,6 +116,7 @@ for i in range(len(segmentOrder)):
     shellFormat += f"[{'' if i < len(segmentOrder) -1 else ''}](fg:{segmentColors[i][1]} {bgStr})"
 
 # Add the prompt
+config["line_break"]["disabled"] = not TWOLINEPROMPT
 shellFormat += "$line_break"
 for i in range(len(segmentContents["prompt"])):
     shellFormat += segmentContents["prompt"][i]
